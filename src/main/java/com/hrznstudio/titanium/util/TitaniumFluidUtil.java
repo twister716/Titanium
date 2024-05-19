@@ -9,7 +9,6 @@ package com.hrznstudio.titanium.util;
 
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.fluids.FluidActionResult;
-import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
@@ -24,16 +23,7 @@ public class TitaniumFluidUtil {
     @Nonnull
     public static FluidActionResult tryEmptyContainer(@Nonnull ItemStack container, IFluidHandler fluidDestination, int maxAmount, boolean doDrain) {
         ItemStack containerCopy = ItemHandlerHelper.copyStackWithSize(container, 1);
-        return FluidUtil.getFluidHandler(containerCopy)
-            .map(containerFluidHandler -> {
-                FluidStack transfer = FluidUtil.tryFluidTransfer(fluidDestination, containerFluidHandler, maxAmount, doDrain);
-                if (transfer.isEmpty()) {
-                    return FluidActionResult.FAILURE;
-                }
-                ItemStack resultContainer = containerFluidHandler.getContainer();
-                return new FluidActionResult(resultContainer);
-            })
-            .orElse(FluidActionResult.FAILURE);
+        return FluidUtil.tryEmptyContainer(containerCopy, fluidDestination, maxAmount, null, doDrain);
     }
 
 }
