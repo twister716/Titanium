@@ -381,5 +381,11 @@ public abstract class ActiveTile<T extends ActiveTile<T>> extends BasicTile<T> i
         return this.level.getBlockEntity(this.worldPosition) == this;
     }
 
+    public MultiTankComponent<T> getMultiTankComponent() {
+        return multiTankComponent;
+    }
 
+    public MultiFilterComponent getMultiFilterComponent() {
+        return multiFilterComponent;
+    }
 }
