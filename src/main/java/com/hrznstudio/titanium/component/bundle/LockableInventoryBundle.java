@@ -141,4 +141,11 @@ public class LockableInventoryBundle<T extends BasicTile & IComponentHarness> im
         return inventory;
     }
 
+    public boolean isLocked() {
+        return isLocked;
+    }
+
+    public ItemStack[] getFilter() {
+        return filter;
+    }
 }
