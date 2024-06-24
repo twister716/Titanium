@@ -39,7 +39,9 @@ public class AugmentWrapper {
             if (STACK_AUGMENT_CACHE.containsKey(hash)) {
                 return STACK_AUGMENT_CACHE.get(hash);
             } else if (augment.hasTag() && augment.getTag().contains(AUGMENT_NBT)) {
-                return STACK_AUGMENT_CACHE.put(hash, new AugmentCache(augment));
+                var augmentCache = new AugmentCache(augment);
+                STACK_AUGMENT_CACHE.put(hash, augmentCache);
+                return augmentCache;
             }
         }
         return null;
