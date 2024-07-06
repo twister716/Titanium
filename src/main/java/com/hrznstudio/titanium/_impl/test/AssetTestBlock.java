@@ -10,21 +10,19 @@ package com.hrznstudio.titanium._impl.test;
 import com.hrznstudio.titanium._impl.test.tile.AssetTestTile;
 import com.hrznstudio.titanium.block.RotatableBlock;
 import com.hrznstudio.titanium.datagenerator.loot.block.BasicBlockLootTables;
-import net.minecraft.world.level.block.Block;
+import com.hrznstudio.titanium.module.BlockWithTile;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.storage.loot.LootTable;
-import net.minecraftforge.registries.RegistryObject;
-import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nonnull;
 
 public class AssetTestBlock extends RotatableBlock<AssetTestTile> {
 
-    public static Pair<RegistryObject<Block>, RegistryObject<BlockEntityType<?>>> TEST;
+    public static BlockWithTile TEST;
 
     public AssetTestBlock() {
-        super("asset_test", Properties.copy(Blocks.STONE), AssetTestTile.class);
+        super("asset_test", Properties.ofFullCopy(Blocks.STONE), AssetTestTile.class);
     }
 
 

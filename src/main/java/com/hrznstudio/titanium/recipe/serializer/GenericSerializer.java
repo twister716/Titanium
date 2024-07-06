@@ -7,102 +7,37 @@
 
 package com.hrznstudio.titanium.recipe.serializer;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
 import com.hrznstudio.titanium.Titanium;
 import com.hrznstudio.titanium.network.CompoundSerializableDataHandler;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
-import net.minecraftforge.common.crafting.CraftingHelper;
-import net.minecraftforge.common.crafting.conditions.ICondition;
 
-import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.lang.reflect.Field;
-import java.util.Map;
 import java.util.function.Supplier;
 
-/**
- * Generic recipe serializer, that will serialize a recipe from the Handlers in @{@link JSONSerializableDataHandler}.
- * All fields in the @{@link SerializableRecipe} must be public to be used properly.
- *
- * @param <T>
- */
-public class GenericSerializer<T extends SerializableRecipe> implements RecipeSerializer<T>, IRecipeSerializerReversed<T> {
+public class GenericSerializer<T extends Recipe<?>> implements RecipeSerializer<T> {
     private final Class<T> recipeClass;
     private final Supplier<RecipeType<?>> recipeTypeSupplier;
+    private final MapCodec<T> codec;
+    private final StreamCodec<RegistryFriendlyByteBuf, T> streamCodec = StreamCodec.ofMember((value, output) -> toNetwork(output, value), this::fromNetwork);
 
-    public GenericSerializer(Class<T> recipeClass, Supplier<RecipeType<?>> recipeTypeSupplier) {
+    public GenericSerializer(Class<T> recipeClass, Supplier<RecipeType<?>> recipeTypeSupplier, MapCodec<T> codec) {
         this.recipeClass = recipeClass;
         this.recipeTypeSupplier = recipeTypeSupplier;
-    }
-
-    // Reading the recipe from the json file
-    @Override
-    @Nonnull
-    public T fromJson(@Nonnull ResourceLocation recipeId, JsonObject json) {
-        try {
-            T recipe = recipeClass.getConstructor(ResourceLocation.class).newInstance(recipeId);
-            for (Map.Entry<String, JsonElement> entry : json.entrySet()) {
-                if (fieldExists(entry.getKey()) && JSONSerializableDataHandler.acceptField(recipeClass.getField(entry.getKey()), recipeClass.getField(entry.getKey()).getType())) {
-                    recipeClass.getField(entry.getKey()).set(recipe, JSONSerializableDataHandler.read(recipeClass.getField(entry.getKey()).getType(), entry.getValue()));
-                }
-            }
-            return recipe;
-        } catch (Exception e) {
-            Titanium.LOGGER.catching(e);
-            throw new JsonParseException(e);
-        }
-    }
-
-    @Override
-    public T fromJson(ResourceLocation recipeLoc, JsonObject recipeJson, ICondition.IContext context) {
-        if (CraftingHelper.processConditions(recipeJson, "conditions", context)){
-            return fromJson(recipeLoc, recipeJson);
-        }
-        return null;
-    }
-
-    // Writes a json object from a recipe object
-    @Override
-    public JsonObject write(T recipe) {
-        JsonObject object = new JsonObject();
-        object.addProperty("type", recipeTypeSupplier.get().toString());
-        try {
-            for (Field field : recipeClass.getFields()) {
-                if (JSONSerializableDataHandler.acceptField(field, field.getType())) {
-                    object.add(field.getName(), JSONSerializableDataHandler.write(field.getType(), field.get(recipe)));
-                }
-            }
-        } catch (Exception e) {
-            Titanium.LOGGER.catching(e);
-        }
-        if (recipe.getOutputCondition() != null){
-            JsonObject recipeCondition = new JsonObject();
-            recipeCondition.addProperty("type", "forge:conditional");
-            JsonArray recipes = new JsonArray();
-            JsonObject filteredRecipe = new JsonObject();
-            JsonArray conditions = new JsonArray();
-            conditions.add(recipe.getOutputCondition().getRight().getJson(recipe.getOutputCondition().getLeft()));
-            filteredRecipe.add("conditions", conditions);
-            filteredRecipe.add("recipe", object);
-            recipes.add(filteredRecipe);
-            recipeCondition.add("recipes", recipes);
-            return recipeCondition;
-        }
-        return object;
+        this.codec = codec;
     }
 
     // Reading from a packet buffer
-    @Override
     @ParametersAreNonnullByDefault
-    public T fromNetwork(ResourceLocation recipeId, FriendlyByteBuf buffer) {
+    public T fromNetwork(RegistryFriendlyByteBuf buffer) {
         try {
-            T recipe = recipeClass.getConstructor(ResourceLocation.class).newInstance(recipeId);
+            T recipe = recipeClass.getConstructor().newInstance();
             for (Field field : recipeClass.getFields()) {
                 if (CompoundSerializableDataHandler.acceptField(field, field.getType())) {
                     CompoundSerializableDataHandler.readField(field, field.getType(), buffer, recipe);
@@ -110,16 +45,14 @@ public class GenericSerializer<T extends SerializableRecipe> implements RecipeSe
             }
             return recipe;
         } catch (Exception e) {
-            Titanium.LOGGER.error(recipeId);
             Titanium.LOGGER.catching(e);
         }
         return null;
     }
 
     // Writes a recipe to a buffer
-    @Override
     @ParametersAreNonnullByDefault
-    public void toNetwork(FriendlyByteBuf buffer, T recipe) {
+    public void toNetwork(RegistryFriendlyByteBuf buffer, T recipe) {
         try {
             for (Field field : recipeClass.getFields()) {
                 if (CompoundSerializableDataHandler.acceptField(field, field.getType())) {
@@ -131,13 +64,13 @@ public class GenericSerializer<T extends SerializableRecipe> implements RecipeSe
         }
     }
 
-    private boolean fieldExists(String field) {
-        for (Field recipeClassField : recipeClass.getFields()) {
-            if (recipeClassField.getName().equalsIgnoreCase(field)) {
-                return true;
-            }
-        }
-        return false;
+    @Override
+    public StreamCodec<RegistryFriendlyByteBuf, T> streamCodec() {
+        return streamCodec;
     }
 
+    @Override
+    public MapCodec<T> codec() {
+        return codec;
+    }
 }

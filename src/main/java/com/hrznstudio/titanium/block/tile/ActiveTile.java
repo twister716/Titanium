@@ -43,6 +43,7 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -54,21 +55,20 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.fluids.FluidType;
-import net.minecraftforge.fluids.FluidUtil;
-import net.minecraftforge.fluids.capability.IFluidHandler;
-import net.minecraftforge.network.NetworkHooks;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.fluids.FluidType;
+import net.neoforged.neoforge.fluids.FluidUtil;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.items.IItemHandler;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public abstract class ActiveTile<T extends ActiveTile<T>> extends BasicTile<T> implements IScreenAddonProvider,
     ITickableBlockEntity<T>, MenuProvider, IButtonHandler, IFacingComponentHarness, IContainerAddonProvider,
@@ -95,11 +95,11 @@ public abstract class ActiveTile<T extends ActiveTile<T>> extends BasicTile<T> i
 
     @Override
     @ParametersAreNonnullByDefault
-    public InteractionResult onActivated(Player player, InteractionHand hand, Direction facing, double hitX, double hitY, double hitZ) {
+    public ItemInteractionResult onActivated(Player player, InteractionHand hand, Direction facing, double hitX, double hitY, double hitZ) {
         if (multiTankComponent != null && FluidUtil.interactWithFluidHandler(player, hand, multiTankComponent.getCapabilityForSide(null).orElse(new MultiTankComponent.MultiTankCapabilityHandler(new ArrayList<>())))) {
-            return InteractionResult.SUCCESS;
+            return ItemInteractionResult.SUCCESS;
         }
-        return InteractionResult.PASS;
+        return ItemInteractionResult.SKIP_DEFAULT_BLOCK_INTERACTION;
     }
 
     @Override
@@ -108,8 +108,8 @@ public abstract class ActiveTile<T extends ActiveTile<T>> extends BasicTile<T> i
     }
 
     public void openGui(Player player) {
-        if (player instanceof ServerPlayer) {
-            NetworkHooks.openScreen((ServerPlayer) player, this, buffer ->
+        if (player instanceof ServerPlayer sp) {
+            sp.openMenu(this, buffer ->
                 LocatorFactory.writePacketBuffer(buffer, new TileEntityLocatorInstance(this.worldPosition)));
         }
     }
@@ -175,17 +175,6 @@ public abstract class ActiveTile<T extends ActiveTile<T>> extends BasicTile<T> i
         this.bundles.stream().forEach(iComponentBundle -> iComponentBundle.getScreenAddons().forEach(this::addGuiAddonFactory));
     }
 
-    @Nonnull
-    @Override
-    public <U> LazyOptional<U> getCapability(@Nonnull Capability<U> cap, @Nullable Direction side) {
-        if (cap == ForgeCapabilities.ITEM_HANDLER && multiInventoryComponent != null) {
-            return multiInventoryComponent.getCapabilityForSide(FacingUtil.getFacingRelative(this.getFacingDirection(), side)).cast();
-        }
-        if (cap == ForgeCapabilities.FLUID_HANDLER && multiTankComponent != null) {
-            return multiTankComponent.getCapabilityForSide(FacingUtil.getFacingRelative(this.getFacingDirection(), side)).cast();
-        }
-        return LazyOptional.empty();
-    }
 
     public MultiInventoryComponent<T> getMultiInventoryComponent() {
         return multiInventoryComponent;
@@ -296,7 +285,7 @@ public abstract class ActiveTile<T extends ActiveTile<T>> extends BasicTile<T> i
                 if (multiTankComponent != null) {
                     for (FluidTankComponent<T> fluidTankComponent : multiTankComponent.getTanks()) {
                         if (fluidTankComponent.getName().equalsIgnoreCase(name))
-                            playerEntity.containerMenu.getCarried().getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).ifPresent(iFluidHandlerItem -> {
+                            Optional.ofNullable(playerEntity.containerMenu.getCarried().getCapability(Capabilities.FluidHandler.ITEM)).ifPresent(iFluidHandlerItem -> {
                                 if (fill) {
                                     int amount = playerEntity.containerMenu.getCarried().getItem() instanceof BucketItem ? FluidType.BUCKET_VOLUME : Integer.MAX_VALUE;
                                     amount = fluidTankComponent.fill(iFluidHandlerItem.drain(amount, IFluidHandler.FluidAction.SIMULATE), IFluidHandler.FluidAction.EXECUTE);
@@ -321,7 +310,7 @@ public abstract class ActiveTile<T extends ActiveTile<T>> extends BasicTile<T> i
                 for (IFilter<?> filter : multiFilterComponent.getFilters()) {
                     if (filter.getName().equals(name)) {
                         int slot = compound.getInt("Slot");
-                        filter.setFilter(slot, ItemStack.of(compound.getCompound("Filter")));
+                        filter.setFilter(slot, ItemStack.parseOptional(level.registryAccess(), compound.getCompound("Filter")));
                         markForUpdate();
                         break;
                     }
@@ -368,21 +357,20 @@ public abstract class ActiveTile<T extends ActiveTile<T>> extends BasicTile<T> i
         return this.getLevel() != null ? ContainerLevelAccess.create(this.getLevel(), this.getBlockPos()) : ContainerLevelAccess.NULL;
     }
 
-    @Override
-    public void invalidateCaps() {
-        super.invalidateCaps();
-        if (this.multiInventoryComponent != null)
-            this.multiInventoryComponent.getLazyOptionals().forEach(LazyOptional::invalidate);
-        if (this.multiTankComponent != null)
-            this.multiTankComponent.getLazyOptionals().forEach(LazyOptional::invalidate);
-    }
-
     public boolean canInteract() {
         return this.level.getBlockEntity(this.worldPosition) == this;
     }
 
     public MultiTankComponent<T> getMultiTankComponent() {
         return multiTankComponent;
+    }
+
+    public IFluidHandler getFluidHandler(@Nullable Direction direction) {
+        return multiTankComponent == null ? null : multiTankComponent.getCapabilityForSide(FacingUtil.getFacingRelative(getFacingDirection(), direction)).orElse(null);
+    }
+
+    public IItemHandler getItemHandler(@Nullable Direction direction) {
+        return multiInventoryComponent == null ? null : multiInventoryComponent.getCapabilityForSide(FacingUtil.getFacingRelative(getFacingDirection(), direction)).orElse(null);
     }
 
     public MultiFilterComponent getMultiFilterComponent() {

@@ -17,7 +17,7 @@ import com.hrznstudio.titanium.tab.TitaniumTab;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.NonNullList;
-import net.minecraft.data.recipes.FinishedRecipe;
+import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.world.Containers;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockGetter;
@@ -43,11 +43,9 @@ import java.util.function.Consumer;
 
 public abstract class BasicBlock extends Block implements IRecipeProvider, IBlockLootTableProvider {
     private TitaniumTab itemGroup = null;
-    private final String name;
 
-    public BasicBlock(String name, Properties properties) {
+    public BasicBlock(Properties properties) {
         super(properties);
-        this.name = name;
     }
 
     @Nullable
@@ -112,7 +110,7 @@ public abstract class BasicBlock extends Block implements IRecipeProvider, IBloc
     }
 
     @Override
-    public void registerRecipe(Consumer<FinishedRecipe> consumer) {
+    public void registerRecipe(RecipeOutput output) {
 
     }
 
@@ -143,6 +141,7 @@ public abstract class BasicBlock extends Block implements IRecipeProvider, IBloc
         return false;
     }
 
+    @Override
     public LootTable.Builder getLootTable(@Nonnull BasicBlockLootTables blockLootTables) {
         return blockLootTables.droppingSelf(this);
     }

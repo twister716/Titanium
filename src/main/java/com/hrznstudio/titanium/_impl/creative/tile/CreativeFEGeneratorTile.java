@@ -15,11 +15,11 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.neoforged.neoforge.capabilities.Capabilities;
 
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -27,7 +27,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class CreativeFEGeneratorTile extends PoweredTile<CreativeFEGeneratorTile> {
 
     public CreativeFEGeneratorTile(BlockPos pos, BlockState state) {
-        super((BasicTileBlock<CreativeFEGeneratorTile>) CreativeFEGeneratorBlock.INSTANCE.getLeft().get(),CreativeFEGeneratorBlock.INSTANCE.getRight().get(), pos, state);
+        super((BasicTileBlock<CreativeFEGeneratorTile>) CreativeFEGeneratorBlock.INSTANCE.getBlock(),CreativeFEGeneratorBlock.INSTANCE.type().get(), pos, state);
     }
 
     @Override
@@ -35,9 +35,9 @@ public class CreativeFEGeneratorTile extends PoweredTile<CreativeFEGeneratorTile
         super.serverTick(level, pos, state, blockEntity);
         this.getEnergyStorage().receiveEnergy(Integer.MAX_VALUE, false);
         for (Direction direction : Direction.values()) {
-            BlockEntity tile = this.level.getBlockEntity(this.getBlockPos().relative(direction));
-            if (tile != null)
-                tile.getCapability(ForgeCapabilities.ENERGY, direction.getOpposite()).ifPresent(iEnergyStorage -> iEnergyStorage.receiveEnergy(Integer.MAX_VALUE, false));
+            var iEnergyStorage = this.level.getCapability(Capabilities.EnergyStorage.BLOCK, this.getBlockPos().relative(direction), direction.getOpposite());
+            if (iEnergyStorage != null)
+                iEnergyStorage.receiveEnergy(Integer.MAX_VALUE, false);
         }
         markForUpdate();
     }
@@ -50,12 +50,12 @@ public class CreativeFEGeneratorTile extends PoweredTile<CreativeFEGeneratorTile
 
     @Override
     @ParametersAreNonnullByDefault
-    public InteractionResult onActivated(Player player, InteractionHand hand, Direction facing, double hitX, double hitY, double hitZ) {
-        if (super.onActivated(player, hand, facing, hitX, hitY, hitZ) == InteractionResult.PASS) {
+    public ItemInteractionResult onActivated(Player player, InteractionHand hand, Direction facing, double hitX, double hitY, double hitZ) {
+        if (super.onActivated(player, hand, facing, hitX, hitY, hitZ) == ItemInteractionResult.SKIP_DEFAULT_BLOCK_INTERACTION) {
             openGui(player);
-            return InteractionResult.SUCCESS;
+            return ItemInteractionResult.SUCCESS;
         }
-        return InteractionResult.PASS;
+        return ItemInteractionResult.SKIP_DEFAULT_BLOCK_INTERACTION;
     }
 
     @Nonnull

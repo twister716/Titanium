@@ -22,17 +22,18 @@ import com.hrznstudio.titanium.network.locator.LocatorInstance;
 import com.hrznstudio.titanium.network.locator.instance.EmptyLocatorInstance;
 import com.hrznstudio.titanium.network.locator.instance.InventoryStackLocatorInstance;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.registries.RegistryObject;
+import net.neoforged.neoforge.registries.DeferredHolder;
 
 public class BasicAddonContainer extends BasicInventoryContainer implements IObjectContainer, ILocatable {
 
-    public static RegistryObject<MenuType<?>> TYPE;
+    public static DeferredHolder<MenuType<?>, MenuType<?>> TYPE;
 
     private final ContainerLevelAccess worldPosCallable;
     private final Object provider;
@@ -93,7 +94,7 @@ public class BasicAddonContainer extends BasicInventoryContainer implements IObj
         super.clicked(slotId, dragType, clickTypeIn, player);
     }
 
-    public static BasicAddonContainer create(int id, Inventory inventory, FriendlyByteBuf packetBuffer) {
+    public static BasicAddonContainer create(int id, Inventory inventory, RegistryFriendlyByteBuf packetBuffer) {
         LocatorInstance instance = LocatorFactory.readPacketBuffer(packetBuffer);
         if (instance != null) {
             Player playerEntity = inventory.player;

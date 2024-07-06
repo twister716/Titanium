@@ -10,14 +10,12 @@ package com.hrznstudio.titanium.datagenerator.model;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.CachedOutput;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.DataProvider;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
-import net.minecraftforge.common.util.NonNullLazy;
-import net.minecraftforge.registries.ForgeRegistries;
-
 import javax.annotation.Nonnull;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -26,15 +24,16 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
 
 public class BlockItemModelGeneratorProvider implements DataProvider {
 
     private static final Gson GSON = (new GsonBuilder()).setPrettyPrinting().create();
     private final DataGenerator generator;
     private final String modid;
-    private final NonNullLazy<List<Block>> blocksToProcess;
+    private final Supplier<List<Block>> blocksToProcess;
 
-    public BlockItemModelGeneratorProvider(DataGenerator generator, String modid, NonNullLazy<List<Block>> blocksToProcess) {
+    public BlockItemModelGeneratorProvider(DataGenerator generator, String modid, Supplier<List<Block>> blocksToProcess) {
         this.generator = generator;
         this.modid = modid;
         this.blocksToProcess = blocksToProcess;
@@ -42,7 +41,7 @@ public class BlockItemModelGeneratorProvider implements DataProvider {
 
     private static JsonObject createModel(Block block) {
         JsonObject object = new JsonObject();
-        ResourceLocation blockRL = ForgeRegistries.BLOCKS.getKey(block);
+        ResourceLocation blockRL = BuiltInRegistries.BLOCK.getKey(block);
         object.addProperty("parent", blockRL.getNamespace() + ":block/" + blockRL.getPath());
         return object;
     }
@@ -59,7 +58,7 @@ public class BlockItemModelGeneratorProvider implements DataProvider {
         List<CompletableFuture<?>> futures = new ArrayList<>();
         blocksToProcess.get().forEach(blockBase -> {
             futures.add(CompletableFuture.runAsync(() -> {
-                try (BufferedWriter bufferedwriter = Files.newBufferedWriter(output.resolve(ForgeRegistries.BLOCKS.getKey(blockBase).getPath() + ".json"))) {
+                try (BufferedWriter bufferedwriter = Files.newBufferedWriter(output.resolve(BuiltInRegistries.BLOCK.getKey(blockBase).getPath() + ".json"))) {
                     bufferedwriter.write(GSON.toJson(createModel(blockBase)));
                 } catch (Exception e) {
 

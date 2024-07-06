@@ -24,6 +24,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.Level;
@@ -51,7 +52,7 @@ public class AssetTestTile extends PoweredTile<AssetTestTile>{
     private SidedFluidTankComponent<AssetTestTile> fluidTank;
 
     public AssetTestTile(BlockPos pos, BlockState state) {
-        super((BasicTileBlock<AssetTestTile>) AssetTestBlock.TEST.getLeft().get(), AssetTestBlock.TEST.getRight().get(), pos, state);
+        super((BasicTileBlock<AssetTestTile>) AssetTestBlock.TEST.block().get(), AssetTestBlock.TEST.type().get(), pos, state);
         this.addInventory(inventory = (SidedInventoryComponent<AssetTestTile>) new SidedInventoryComponent<AssetTestTile>("inventory", 8, 88, 18, 0)
             .setFacingHandlerPos(-15, 1).setRange(9, 2)
             .setComponentHarness(this)
@@ -98,12 +99,12 @@ public class AssetTestTile extends PoweredTile<AssetTestTile>{
 
     @Override
     @ParametersAreNonnullByDefault
-    public InteractionResult onActivated(Player player, InteractionHand hand, Direction facing, double hitX, double hitY, double hitZ) {
-        if (super.onActivated(player, hand, facing, hitX, hitY, hitZ) == InteractionResult.PASS) {
+    public ItemInteractionResult onActivated(Player player, InteractionHand hand, Direction facing, double hitX, double hitY, double hitZ) {
+        if (super.onActivated(player, hand, facing, hitX, hitY, hitZ) == ItemInteractionResult.SKIP_DEFAULT_BLOCK_INTERACTION) {
             openGui(player);
-            return InteractionResult.SUCCESS;
+            return ItemInteractionResult.SUCCESS;
         }
-        return InteractionResult.PASS;
+        return ItemInteractionResult.SKIP_DEFAULT_BLOCK_INTERACTION;
     }
 
     @Override

@@ -8,8 +8,8 @@
 package com.hrznstudio.titanium.container.addon;
 
 import com.hrznstudio.titanium.component.inventory.InventoryComponent;
-import net.minecraftforge.items.IItemHandler;
-import net.minecraftforge.items.SlotItemHandler;
+import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.items.SlotItemHandler;
 import org.apache.commons.lang3.tuple.Pair;
 
 public class UpdatableSlotItemHandler extends SlotItemHandler {

@@ -13,57 +13,56 @@ import com.hrznstudio.titanium._impl.test.MachineTestBlock;
 import com.hrznstudio.titanium._impl.test.TestBlock;
 import com.hrznstudio.titanium._impl.test.TwentyFourTestBlock;
 import com.hrznstudio.titanium._impl.test.recipe.TestSerializableRecipe;
+import com.hrznstudio.titanium.attachment.StoredEnergyAttachment;
 import com.hrznstudio.titanium.block_network.NetworkManager;
-import com.hrznstudio.titanium.capability.CapabilityItemStackHolder;
 import com.hrznstudio.titanium.client.screen.container.BasicAddonScreen;
 import com.hrznstudio.titanium.command.RewardCommand;
 import com.hrznstudio.titanium.command.RewardGrantCommand;
 import com.hrznstudio.titanium.container.BasicAddonContainer;
 import com.hrznstudio.titanium.event.handler.EventManager;
+import com.hrznstudio.titanium.item.AugmentWrapper;
+import com.hrznstudio.titanium.item.EnergyItem;
 import com.hrznstudio.titanium.module.ModuleController;
 import com.hrznstudio.titanium.network.NetworkHandler;
 import com.hrznstudio.titanium.network.locator.LocatorTypes;
 import com.hrznstudio.titanium.network.messages.ButtonClickNetworkMessage;
 import com.hrznstudio.titanium.network.messages.TileFieldNetworkMessage;
-import com.hrznstudio.titanium.recipe.condition.ContentExistsConditionSerializer;
+import com.hrznstudio.titanium.recipe.condition.ContentExistsCondition;
 import com.hrznstudio.titanium.recipe.serializer.GenericSerializer;
-import com.hrznstudio.titanium.recipe.shapelessenchant.ShapelessEnchantSerializer;
 import com.hrznstudio.titanium.reward.Reward;
 import com.hrznstudio.titanium.reward.RewardManager;
 import com.hrznstudio.titanium.reward.RewardSyncMessage;
 import com.hrznstudio.titanium.reward.storage.RewardWorldStorage;
 import com.hrznstudio.titanium.util.SidedHandler;
+import com.mojang.serialization.Codec;
 import net.minecraft.client.gui.screens.MenuScreens;
+import net.minecraft.core.component.DataComponentType;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.MenuType;
-import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.client.event.RenderHighlightEvent;
-import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent;
-import net.minecraftforge.common.crafting.CraftingHelper;
-import net.minecraftforge.common.extensions.IForgeMenuType;
-import net.minecraftforge.common.util.NonNullLazy;
-import net.minecraftforge.data.event.GatherDataEvent;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.event.server.ServerStartingEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.loading.FMLLoader;
-import net.minecraftforge.network.NetworkDirection;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.fml.loading.FMLLoader;
+import net.neoforged.neoforge.attachment.AttachmentType;
+import net.neoforged.neoforge.client.event.RenderHighlightEvent;
+import net.neoforged.neoforge.common.extensions.IMenuTypeExtension;
+import net.neoforged.neoforge.data.event.GatherDataEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.event.server.ServerStartingEvent;
+import net.neoforged.neoforge.event.tick.LevelTickEvent;
+import net.neoforged.neoforge.registries.NeoForgeRegistries;
+import net.neoforged.neoforge.registries.RegisterEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 
 @Mod(Titanium.MODID)
@@ -73,16 +72,18 @@ public class Titanium extends ModuleController {
     public static final Logger LOGGER = LogManager.getLogger(MODID);
     public static NetworkHandler NETWORK = new NetworkHandler(MODID);
 
-    public Titanium() {
-        NETWORK.registerMessage(ButtonClickNetworkMessage.class);
-        NETWORK.registerMessage(RewardSyncMessage.class);
-        NETWORK.registerMessage(TileFieldNetworkMessage.class);
+    public Titanium(ModContainer container) {
+        super(container);
+        NETWORK.registerMessage("button_click", ButtonClickNetworkMessage.class);
+        NETWORK.registerMessage("reward_sync", RewardSyncMessage.class);
+        NETWORK.registerMessage("tile_field", TileFieldNetworkMessage.class);
         SidedHandler.runOn(Dist.CLIENT, () -> () -> EventManager.mod(FMLClientSetupEvent.class).process(this::clientSetup).subscribe());
         EventManager.mod(FMLCommonSetupEvent.class).process(this::commonSetup).subscribe();
         EventManager.forge(PlayerEvent.PlayerLoggedInEvent.class).process(this::onPlayerLoggedIn).subscribe();
         EventManager.forge(ServerStartingEvent.class).process(this::onServerStart).subscribe();
-        EventManager.mod(RegisterCapabilitiesEvent.class).process(CapabilityItemStackHolder::register).subscribe();
-        CraftingHelper.register(new ContentExistsConditionSerializer());
+
+        EventManager.mod(RegisterEvent.class).process(event -> event.register(NeoForgeRegistries.Keys.CONDITION_CODECS, reg ->
+            reg.register(ContentExistsCondition.NAME, ContentExistsCondition.CODEC)));
     }
 
     @Override
@@ -97,11 +98,18 @@ public class Titanium extends ModuleController {
 
     @Override
     protected void initModules() {
-        BasicAddonContainer.TYPE = getRegistries().registerGeneric(ForgeRegistries.MENU_TYPES.getRegistryKey(), "addon_container", () -> (MenuType) IForgeMenuType.create(BasicAddonContainer::create));
+        BasicAddonContainer.TYPE = getRegistries().registerGeneric(Registries.MENU, "addon_container", () -> (MenuType) IMenuTypeExtension.create(BasicAddonContainer::create));
+        StoredEnergyAttachment.TYPE = getRegistries()
+            .registerTyped(Registries.DATA_COMPONENT_TYPE, "stored_energy", () -> DataComponentType.<StoredEnergyAttachment>builder()
+                .persistent(StoredEnergyAttachment.CODEC)
+                .build());
+        AugmentWrapper.ATTACHMENT = getRegistries()
+            .registerTyped(Registries.DATA_COMPONENT_TYPE, "augments", () -> DataComponentType.<Map<String, Float>>builder()
+                .persistent(Codec.unboundedMap(Codec.STRING, Codec.FLOAT))
+                .build());
         if (!FMLLoader.isProduction()) { //ENABLE IN DEV
-            getRegistries().registerGeneric(ForgeRegistries.RECIPE_SERIALIZERS.getRegistryKey(), "shapeless_enchant", () -> (RecipeSerializer) new ShapelessEnchantSerializer());
-            TestSerializableRecipe.SERIALIZER = getRegistries().registerGeneric(ForgeRegistries.RECIPE_SERIALIZERS.getRegistryKey(), "test_serializer", () -> new GenericSerializer<>(TestSerializableRecipe.class, TestSerializableRecipe.RECIPE_TYPE));
-            TestSerializableRecipe.RECIPE_TYPE = getRegistries().registerGeneric(ForgeRegistries.RECIPE_TYPES.getRegistryKey(), "test_recipe_type", () -> RecipeType.simple(new ResourceLocation(MODID, "test_recipe_type")));
+            TestSerializableRecipe.SERIALIZER = getRegistries().registerGeneric(Registries.RECIPE_SERIALIZER, "test_serializer", () -> new GenericSerializer<>(TestSerializableRecipe.class, TestSerializableRecipe.RECIPE_TYPE::value, TestSerializableRecipe.CODEC));
+            TestSerializableRecipe.RECIPE_TYPE = getRegistries().registerGeneric(Registries.RECIPE_TYPE, "test_recipe_type", () -> RecipeType.simple(ResourceLocation.fromNamespaceAndPath(MODID, "test_recipe_type")));
             TestBlock.TEST = getRegistries().registerBlockWithTile("block_test", () -> (TestBlock) new TestBlock(), null);
             TwentyFourTestBlock.TEST = getRegistries().registerBlockWithTile("block_twenty_four_test", () -> (TwentyFourTestBlock) new TwentyFourTestBlock(), null);
             AssetTestBlock.TEST = getRegistries().registerBlockWithTile("block_asset_test", () -> (AssetTestBlock) new AssetTestBlock(), null);
@@ -111,33 +119,16 @@ public class Titanium extends ModuleController {
     }
 
     @Override
-    public void onPostInit() {
-        super.onPostInit();
-    }
-
-    @Override
     public void addDataProvider(GatherDataEvent event) {
-        NonNullLazy<List<Block>> blocksToProcess = NonNullLazy.of(() ->
-            ForgeRegistries.BLOCKS.getValues()
-                .stream()
-                .filter(basicBlock -> Optional.ofNullable(ForgeRegistries.BLOCKS.getKey(basicBlock))
-                    .map(ResourceLocation::getNamespace)
-                    .filter(MODID::equalsIgnoreCase)
-                    .isPresent())
-                .collect(Collectors.toList())
-        );
-        //event.getGenerator().addProvider(event.includeClient(), new BlockItemModelGeneratorProvider(event.getGenerator(), MODID, blocksToProcess));
-        //event.getGenerator().addProvider(event.includeServer(), new TitaniumLootTableProvider(event.getGenerator(), blocksToProcess));
-        //event.getGenerator().addProvider(event.includeServer(), new JsonRecipeSerializerProvider(event.getGenerator(), MODID));
     }
 
     private void commonSetup(FMLCommonSetupEvent event) {
         RewardManager.get().getRewards().values().forEach(rewardGiver -> rewardGiver.getRewards().forEach(reward -> reward.register(Dist.DEDICATED_SERVER)));
         LocatorTypes.register();
-        EventManager.forge(TickEvent.LevelTickEvent.class)
-            .filter(worldTickEvent -> !worldTickEvent.level.isClientSide && worldTickEvent.phase == TickEvent.Phase.END)
+        EventManager.forge(LevelTickEvent.Post.class)
+            .filter(worldTickEvent -> !worldTickEvent.getLevel().isClientSide)
             .process(worldTickEvent -> {
-                NetworkManager.get(worldTickEvent.level).getNetworks().forEach(network -> network.update(worldTickEvent.level));
+                NetworkManager.get(worldTickEvent.getLevel()).getNetworks().forEach(network -> network.update(worldTickEvent.getLevel()));
             }).subscribe();
     }
 
@@ -146,7 +137,6 @@ public class Titanium extends ModuleController {
         EventManager.forge(RenderHighlightEvent.Block.class).process(TitaniumClient::blockOverlayEvent).subscribe();
         TitaniumClient.registerModelLoader();
         RewardManager.get().getRewards().values().forEach(rewardGiver -> rewardGiver.getRewards().forEach(reward -> reward.register(Dist.CLIENT)));
-        MenuScreens.register((MenuType<? extends BasicAddonContainer>) BasicAddonContainer.TYPE.get(), BasicAddonScreen::new);
     }
 
     private void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
@@ -160,8 +150,8 @@ public class Titanium extends ModuleController {
                 storage.getConfiguredPlayers().add(event.getEntity().getUUID());
                 storage.setDirty();
             }
-            CompoundTag nbt = storage.serializeSimple();
-            event.getEntity().getServer().getPlayerList().getPlayers().forEach(serverPlayerEntity -> Titanium.NETWORK.get().sendTo(new RewardSyncMessage(nbt), serverPlayerEntity.connection.connection, NetworkDirection.PLAY_TO_CLIENT));
+            CompoundTag nbt = storage.serializeSimple(event.getEntity().level().registryAccess());
+            event.getEntity().getServer().getPlayerList().getPlayers().forEach(serverPlayerEntity -> Titanium.NETWORK.sendTo(new RewardSyncMessage(nbt), serverPlayerEntity));
         });
     }
 

@@ -9,10 +9,8 @@ package com.hrznstudio.titanium.reward;
 
 import com.hrznstudio.titanium.network.Message;
 import com.hrznstudio.titanium.reward.storage.ClientRewardStorage;
-import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraftforge.network.NetworkEvent;
-
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 public class RewardSyncMessage extends Message {
 
@@ -27,9 +25,7 @@ public class RewardSyncMessage extends Message {
     }
 
     @Override
-    protected void handleMessage(NetworkEvent.Context context) {
-        Minecraft.getInstance().tell(() -> {
-            ClientRewardStorage.REWARD_STORAGE.deserializeNBT(compoundNBT);
-        });
+    protected void handleMessage(IPayloadContext context) {
+        ClientRewardStorage.REWARD_STORAGE.deserializeNBT(context.player().level().registryAccess(), compoundNBT);
     }
 }

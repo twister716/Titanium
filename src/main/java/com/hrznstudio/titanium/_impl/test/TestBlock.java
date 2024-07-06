@@ -12,12 +12,10 @@ import com.hrznstudio.titanium.annotation.config.ConfigFile;
 import com.hrznstudio.titanium.annotation.config.ConfigVal;
 import com.hrznstudio.titanium.block.RotatableBlock;
 import com.hrznstudio.titanium.datagenerator.loot.block.BasicBlockLootTables;
-import net.minecraft.world.level.block.Block;
+import com.hrznstudio.titanium.module.BlockWithTile;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.storage.loot.LootTable;
-import net.minecraftforge.registries.RegistryObject;
-import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nonnull;
 
@@ -27,10 +25,10 @@ public class TestBlock extends RotatableBlock<TestTile> {
     @ConfigVal
     public static int DUMB_VALUE = 135;
 
-    public static Pair<RegistryObject<Block>, RegistryObject<BlockEntityType<?>>> TEST;
+    public static BlockWithTile TEST;
 
     public TestBlock() {
-        super("test", Properties.copy(Blocks.STONE), TestTile.class);
+        super("test", Properties.ofFullCopy(Blocks.STONE), TestTile.class);
     }
 
 

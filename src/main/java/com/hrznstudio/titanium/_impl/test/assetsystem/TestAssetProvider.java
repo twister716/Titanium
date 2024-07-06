@@ -18,14 +18,15 @@ import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 
 import javax.annotation.Nullable;
-import java.awt.*;
+import java.awt.Point;
+import java.awt.Rectangle;
 import java.util.HashMap;
 import java.util.Map;
 
 
 public class TestAssetProvider implements IAssetProvider {
     private static Map<IAssetType, IAsset> assetMap;
-    private static ResourceLocation TEST_LOCATION = new ResourceLocation(Titanium.MODID, "textures/gui/carpenter_dev.png");
+    private static ResourceLocation TEST_LOCATION = ResourceLocation.fromNamespaceAndPath(Titanium.MODID, "textures/gui/carpenter_dev.png");
 
     private static final IBackgroundAsset BACKGROUND_ASSET = new IBackgroundAsset() {
         @Override

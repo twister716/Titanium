@@ -19,34 +19,35 @@ import com.hrznstudio.titanium.component.inventory.InventoryComponent;
 import com.hrznstudio.titanium.component.progress.ProgressBarComponent;
 import com.hrznstudio.titanium.container.addon.IContainerAddon;
 import com.hrznstudio.titanium.util.TitaniumFluidUtil;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.common.util.INBTSerializable;
-import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.fluids.FluidActionResult;
-import net.minecraftforge.fluids.FluidUtil;
-import net.minecraftforge.fluids.capability.IFluidHandler;
-import net.minecraftforge.items.ItemHandlerHelper;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.common.util.INBTSerializable;
+import net.neoforged.neoforge.fluids.FluidActionResult;
+import net.neoforged.neoforge.fluids.FluidUtil;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.items.ItemHandlerHelper;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 public class TankInteractionBundle<T extends BasicTile & IComponentHarness> implements IComponentBundle, INBTSerializable<CompoundTag> {
 
-    private final Supplier<LazyOptional<IFluidHandler>> fluidHandler;
+    private final Supplier<Optional<IFluidHandler>> fluidHandler;
     private int posX;
     private int posY;
     private InventoryComponent<T> input;
     private InventoryComponent<T> output;
     private ProgressBarComponent<T> bar;
 
-    public TankInteractionBundle(Supplier<LazyOptional<IFluidHandler>> fluidHandler, int posX, int posY, T componentHarness, int maxProgress) {
+    public TankInteractionBundle(Supplier<Optional<IFluidHandler>> fluidHandler, int posX, int posY, T componentHarness, int maxProgress) {
         this.fluidHandler = fluidHandler;
         this.posX = posX;
         this.posY = posY;
@@ -54,7 +55,7 @@ public class TankInteractionBundle<T extends BasicTile & IComponentHarness> impl
             .setSlotToItemStackRender(0, new ItemStack(Items.BUCKET))
             .setOutputFilter((stack, integer) -> false)
             .setSlotToColorRender(0, DyeColor.BLUE)
-            .setInputFilter((stack, integer) -> stack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).isPresent())
+            .setInputFilter((stack, integer) -> stack.getCapability(Capabilities.FluidHandler.ITEM) != null)
             .setComponentHarness(componentHarness);
         this.output = new InventoryComponent<T>("tank_output", posX + 5, posY + 60, 1)
             .setSlotToItemStackRender(0, new ItemStack(Items.BUCKET))
@@ -64,10 +65,7 @@ public class TankInteractionBundle<T extends BasicTile & IComponentHarness> impl
         this.bar = new ProgressBarComponent<T>(posX + 5, posY + 30, maxProgress)
             .setBarDirection(ProgressBarComponent.BarDirection.ARROW_DOWN)
             .setCanReset(t -> true)
-            .setCanIncrease(t -> {
-                ItemStack stack = getOutputStack(false);
-                return !this.input.getStackInSlot(0).isEmpty() && this.input.getStackInSlot(0).getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).isPresent() && !stack.isEmpty() && !ItemStack.isSameItemSameTags(stack, this.input.getStackInSlot(0)) && (this.output.getStackInSlot(0).isEmpty() || ItemHandlerHelper.canItemStacksStack(stack, this.output.getStackInSlot(0)));
-            })
+            .setCanIncrease(t -> !this.input.getStackInSlot(0).isEmpty() && this.input.getStackInSlot(0).getCapability(Capabilities.FluidHandler.ITEM) != null && !getOutputStack(false).isEmpty() && (this.output.getStackInSlot(0).isEmpty() || ItemStack.isSameItemSameComponents(getOutputStack(false), this.input.getStackInSlot(0))))
             .setOnFinishWork(() -> {
                 ItemStack result = getOutputStack(false);
                 if (ItemHandlerHelper.insertItem(this.output, result, true).isEmpty()) {
@@ -89,15 +87,15 @@ public class TankInteractionBundle<T extends BasicTile & IComponentHarness> impl
     }
 
     public ItemStack getOutputStack(boolean execute) {
-        return fluidHandler.get().map(iFluidHandler -> {
-            ItemStack stack = this.input.getStackInSlot(0).copy();
-            stack.setCount(1);
-            FluidActionResult result = FluidUtil.tryFillContainer(stack, iFluidHandler, Integer.MAX_VALUE, null, execute);
-            if (result.isSuccess()) return result.getResult();
-            result = TitaniumFluidUtil.tryEmptyContainer(stack, iFluidHandler, Integer.MAX_VALUE, execute);
-            if (result.isSuccess()) return result.getResult();
-            return ItemStack.EMPTY;
-        }).orElse(ItemStack.EMPTY);
+        if (!fluidHandler.get().isPresent()) return ItemStack.EMPTY;
+        var iFluidHandler = fluidHandler.get().get();
+        ItemStack stack = this.input.getStackInSlot(0).copy();
+        stack.setCount(1);
+        FluidActionResult result = FluidUtil.tryFillContainer(stack, iFluidHandler, Integer.MAX_VALUE, null, execute);
+        if (result.isSuccess()) return result.getResult();
+        result = TitaniumFluidUtil.tryEmptyContainer(stack, iFluidHandler, Integer.MAX_VALUE, execute);
+        if (result.isSuccess()) return result.getResult();
+        return ItemStack.EMPTY;
     }
 
     @Override
@@ -112,18 +110,18 @@ public class TankInteractionBundle<T extends BasicTile & IComponentHarness> impl
     }
 
     @Override
-    public CompoundTag serializeNBT() {
+    public CompoundTag serializeNBT(HolderLookup.Provider provider) {
         CompoundTag compoundNBT = new CompoundTag();
-        compoundNBT.put("Input", this.input.serializeNBT());
-        compoundNBT.put("Output", this.output.serializeNBT());
-        compoundNBT.put("Bar", this.bar.serializeNBT());
+        compoundNBT.put("Input", this.input.serializeNBT(provider));
+        compoundNBT.put("Output", this.output.serializeNBT(provider));
+        compoundNBT.put("Bar", this.bar.serializeNBT(provider));
         return compoundNBT;
     }
 
     @Override
-    public void deserializeNBT(CompoundTag nbt) {
-        this.input.deserializeNBT(nbt.getCompound("Input"));
-        this.output.deserializeNBT(nbt.getCompound("Output"));
-        this.bar.deserializeNBT(nbt.getCompound("Bar"));
+    public void deserializeNBT(HolderLookup.Provider provider, CompoundTag nbt) {
+        this.input.deserializeNBT(provider, nbt.getCompound("Input"));
+        this.output.deserializeNBT(provider, nbt.getCompound("Output"));
+        this.bar.deserializeNBT(provider, nbt.getCompound("Bar"));
     }
 }

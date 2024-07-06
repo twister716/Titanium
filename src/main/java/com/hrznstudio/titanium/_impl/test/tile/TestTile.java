@@ -34,6 +34,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
@@ -67,7 +68,7 @@ public class TestTile extends PoweredTile<TestTile> implements IRedstoneReader {
     private RedstoneControlButtonComponent<RedstoneAction> redstoneButton;
 
     public TestTile(BlockPos pos, BlockState blockState) {
-        super((BasicTileBlock<TestTile>) TestBlock.TEST.getLeft().get(), TestBlock.TEST.getRight().get(), pos, blockState);
+        super((BasicTileBlock<TestTile>) TestBlock.TEST.getBlock(), TestBlock.TEST.type().get(), pos, blockState);
         this.addInventory(first = (SidedInventoryComponent<TestTile>) new SidedInventoryComponent<TestTile>("test", 80, 30, 1, 0)
             .setValidFaceModes(IFacingComponent.FaceMode.ENABLED, IFacingComponent.FaceMode.NONE)
             .setComponentHarness(this)
@@ -137,11 +138,11 @@ public class TestTile extends PoweredTile<TestTile> implements IRedstoneReader {
 
     @Override
     @ParametersAreNonnullByDefault
-    public InteractionResult onActivated(Player player, InteractionHand hand, Direction facing, double hitX, double hitY, double hitZ) {
-        InteractionResult result = super.onActivated(player, hand, facing, hitX, hitY, hitZ);
-        if (result == InteractionResult.PASS) {
+    public ItemInteractionResult onActivated(Player player, InteractionHand hand, Direction facing, double hitX, double hitY, double hitZ) {
+        ItemInteractionResult result = super.onActivated(player, hand, facing, hitX, hitY, hitZ);
+        if (result == ItemInteractionResult.SKIP_DEFAULT_BLOCK_INTERACTION) {
             openGui(player);
-            return InteractionResult.SUCCESS;
+            return ItemInteractionResult.SUCCESS;
         }
         return result;
     }

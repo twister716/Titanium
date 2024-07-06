@@ -35,11 +35,10 @@ public class BasicItem extends Item {
 
     public BasicItem(String name, Properties properties) {
         super(properties);
-        //setRegistryName(name);
     }
 
     @Override
-    public final void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
+    public void appendHoverText(ItemStack stack, TooltipContext worldIn, List<Component> tooltip, TooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
         if (hasTooltipDetails(null)) {
             addTooltipDetails(null, stack, tooltip, flagIn.isAdvanced());
@@ -74,21 +73,11 @@ public class BasicItem extends Item {
         ALT(GLFW.GLFW_KEY_RIGHT_ALT, GLFW.GLFW_KEY_LEFT_ALT);
 
         final String name;
-        int[] keys;
+        final int[] keys;
 
         Key(int... keys) {
             this.keys = keys;
             this.name = name();
-        }
-
-        Key(int[] keysWin, String macName, int[] keysMac) {
-            if (Minecraft.ON_OSX) {
-                this.keys = keysMac;
-                this.name = macName;
-            } else {
-                this.keys = keysWin;
-                this.name = name();
-            }
         }
 
         public boolean isDown() {

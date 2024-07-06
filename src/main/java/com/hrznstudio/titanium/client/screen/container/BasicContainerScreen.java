@@ -75,8 +75,6 @@ public class BasicContainerScreen<T extends AbstractContainerMenu> extends Abstr
     // drawGuiContainerBackgroundLayer
     @Override
     protected void renderBg(GuiGraphics guiGraphics, float partialTicks, int mouseX, int mouseY) {
-        // renderBackground
-        this.renderBackground(guiGraphics);
         // Width
         xCenter = (width - imageWidth) / 2;
         // Height
@@ -99,10 +97,10 @@ public class BasicContainerScreen<T extends AbstractContainerMenu> extends Abstr
         addons.forEach(iGuiAddon -> {
             if (iGuiAddon instanceof AssetScreenAddon assetGuiAddon) {
                 if (!assetGuiAddon.isBackground()) {
-                    iGuiAddon.drawForegroundLayer(guiGraphics, this, assetProvider, xCenter, yCenter, mouseX, mouseY, minecraft.getDeltaFrameTime());
+                    iGuiAddon.drawForegroundLayer(guiGraphics, this, assetProvider, xCenter, yCenter, mouseX, mouseY, minecraft.getTimer().getGameTimeDeltaPartialTick(false));
                 }
             } else {
-                iGuiAddon.drawForegroundLayer(guiGraphics, this, assetProvider, xCenter, yCenter, mouseX, mouseY, minecraft.getDeltaFrameTime());
+                iGuiAddon.drawForegroundLayer(guiGraphics, this, assetProvider, xCenter, yCenter, mouseX, mouseY, minecraft.getTimer().getGameTimeDeltaPartialTick(false));
             }
         });
         // renderHoveredToolTip

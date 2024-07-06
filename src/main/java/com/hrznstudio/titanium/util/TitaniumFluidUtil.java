@@ -8,10 +8,9 @@
 package com.hrznstudio.titanium.util;
 
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.fluids.FluidActionResult;
-import net.minecraftforge.fluids.FluidUtil;
-import net.minecraftforge.fluids.capability.IFluidHandler;
-import net.minecraftforge.items.ItemHandlerHelper;
+import net.neoforged.neoforge.fluids.FluidActionResult;
+import net.neoforged.neoforge.fluids.FluidUtil;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 
 import javax.annotation.Nonnull;
 
@@ -22,7 +21,7 @@ public class TitaniumFluidUtil {
 
     @Nonnull
     public static FluidActionResult tryEmptyContainer(@Nonnull ItemStack container, IFluidHandler fluidDestination, int maxAmount, boolean doDrain) {
-        ItemStack containerCopy = ItemHandlerHelper.copyStackWithSize(container, 1);
+        ItemStack containerCopy = container.copyWithCount(1);
         return FluidUtil.tryEmptyContainer(containerCopy, fluidDestination, maxAmount, null, doDrain);
     }
 

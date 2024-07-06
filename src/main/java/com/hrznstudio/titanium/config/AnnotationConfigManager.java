@@ -10,10 +10,11 @@ package com.hrznstudio.titanium.config;
 import com.hrznstudio.titanium.annotation.config.ConfigFile;
 import com.hrznstudio.titanium.annotation.config.ConfigVal;
 import com.hrznstudio.titanium.util.AnnotationUtil;
-import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.fml.ModLoadingContext;
-import net.minecraftforge.fml.config.IConfigSpec;
-import net.minecraftforge.fml.config.ModConfig;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.ModLoadingContext;
+import net.neoforged.fml.config.IConfigSpec;
+import net.neoforged.fml.config.ModConfig;
+import net.neoforged.neoforge.common.ModConfigSpec;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -32,11 +33,11 @@ public class AnnotationConfigManager {
         specCaches = new ArrayList<>();
     }
 
-    public void add(Type type) {
+    public void add(ModContainer container, Type type) {
         configClasses.add(type);
         SpecCache specCache = new SpecCache();
         // SCANNING CLASSES
-        ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
+        ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
         for (Class configClass : type.configClass) {
             scanClass(configClass, builder, specCache);
         }
@@ -48,18 +49,18 @@ public class AnnotationConfigManager {
         String fileName = ModLoadingContext.get().getActiveContainer().getModId() + "/" + (type.fileName.isEmpty() ? ModLoadingContext.get().getActiveContainer().getModId() : type.fileName);
         if (!fileName.endsWith(".toml")) fileName = fileName + ".toml";
         specCache.spec = builder.build();
-        ModLoadingContext.get().registerConfig(type.type, specCache.spec, fileName);
+        container.registerConfig(type.type, specCache.spec, fileName);
         specCaches.add(specCache);
     }
 
-    private void scanClass(Class configClass, ForgeConfigSpec.Builder builder, SpecCache specCache) {
+    private void scanClass(Class configClass, ModConfigSpec.Builder builder, SpecCache specCache) {
         builder.push(configClass.getSimpleName());
         try {
             for (Field field : configClass.getFields()) {
                 if (Modifier.isStatic(field.getModifiers()) && field.isAnnotationPresent(ConfigVal.class)) {
                     if (field.getType().isPrimitive() || field.getType().equals(String.class)) {
                         ConfigVal value = field.getAnnotation(ConfigVal.class);
-                        ForgeConfigSpec.ConfigValue configValue = null;
+                        ModConfigSpec.ConfigValue configValue = null;
                         if (!value.comment().isEmpty()) builder.comment(value.comment());
 
                         if (field.isAnnotationPresent(ConfigVal.InRangeDouble.class))
@@ -77,7 +78,7 @@ public class AnnotationConfigManager {
                         specCache.cachedConfigValues.put(field, configValue);
                     } if (field.getType().equals(List.class)) {
                         ConfigVal value = field.getAnnotation(ConfigVal.class);
-                        ForgeConfigSpec.ConfigValue configValue = null;
+                        ModConfigSpec.ConfigValue configValue = null;
                         if (!value.comment().isEmpty()) builder.comment(value.comment());
                         configValue = builder.defineList(value.value().isEmpty() ? field.getName() : value.value(), (List<String>) field.get(null), (object) -> true);
                         specCache.cachedConfigValues.put(field, configValue);
@@ -157,8 +158,8 @@ public class AnnotationConfigManager {
 
     public static class SpecCache {
 
-        public ForgeConfigSpec spec;
-        public HashMap<Field, ForgeConfigSpec.ConfigValue> cachedConfigValues = new HashMap<>();
+        public ModConfigSpec spec;
+        public HashMap<Field, ModConfigSpec.ConfigValue> cachedConfigValues = new HashMap<>();
 
     }
 }

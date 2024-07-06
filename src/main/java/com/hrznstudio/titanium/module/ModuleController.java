@@ -22,14 +22,15 @@ import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.data.event.GatherDataEvent;
-import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
-import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fml.ModLoadingContext;
-import net.minecraftforge.fml.event.config.ModConfigEvent;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.registries.RegistryObject;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.ModList;
+import net.neoforged.fml.ModLoadingContext;
+import net.neoforged.fml.event.config.ModConfigEvent;
+import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.neoforge.data.event.GatherDataEvent;
+import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
+import net.neoforged.neoforge.registries.DeferredHolder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,13 +38,15 @@ import java.util.function.Supplier;
 
 public abstract class ModuleController {
     private final String modid;
+    private final ModContainer container;
     private final AnnotationConfigManager configManager = new AnnotationConfigManager();
     private final PluginManager modPluginManager;
     private final DeferredRegistryHelper deferredRegistryHelper;
     private final List<TitaniumTab> titaniumTabs;
 
-    public ModuleController() {
-        this.modid = ModLoadingContext.get().getActiveContainer().getModId();
+    public ModuleController(ModContainer container) {
+        this.modid = container.getModId();
+        this.container = container;
         this.modPluginManager = new PluginManager(modid, FeaturePlugin.FeaturePluginType.MOD, featurePlugin -> ModList.get().isLoaded(featurePlugin.value()), true);
         this.modPluginManager.execute(PluginPhase.CONSTRUCTION);
         this.deferredRegistryHelper = new DeferredRegistryHelper(this.modid);
@@ -53,14 +56,14 @@ public abstract class ModuleController {
         onPostInit();
     }
 
-    private void addConfig(AnnotationConfigManager.Type type) {
+    private void addConfig(ModContainer container, AnnotationConfigManager.Type type) {
         for (Class configClass : type.getConfigClass()) {
             if (configManager.isClassManaged(configClass)) return;
         }
-        configManager.add(type);
+        configManager.add(container, type);
     }
 
-    public RegistryObject<CreativeModeTab> addCreativeTab(String name, Supplier<ItemStack> icon, String title, TitaniumTab tab){
+    public DeferredHolder<CreativeModeTab, CreativeModeTab> addCreativeTab(String name, Supplier<ItemStack> icon, String title, TitaniumTab tab){
         this.titaniumTabs.add(tab);
         return this.getRegistries().registerGeneric(Registries.CREATIVE_MODE_TAB, name, () -> CreativeModeTab.builder()
             .icon(icon)
@@ -82,7 +85,7 @@ public abstract class ModuleController {
     public void onPostInit() {
         AnnotationUtil.getFilteredAnnotatedClasses(ConfigFile.class, modid).forEach(aClass -> {
             ConfigFile annotation = (ConfigFile) aClass.getAnnotation(ConfigFile.class);
-            addConfig(AnnotationConfigManager.Type.of(annotation.type(), aClass).setName(annotation.value()));
+            addConfig(container, AnnotationConfigManager.Type.of(annotation.type(), aClass).setName(annotation.value()));
         });
         EventManager.mod(ModConfigEvent.Loading.class).process(ev -> {
             configManager.inject(ev.getConfig().getSpec());

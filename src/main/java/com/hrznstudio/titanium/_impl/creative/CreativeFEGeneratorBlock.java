@@ -10,19 +10,18 @@ package com.hrznstudio.titanium._impl.creative;
 import com.hrznstudio.titanium._impl.creative.tile.CreativeFEGeneratorTile;
 import com.hrznstudio.titanium.block.BasicTileBlock;
 import com.hrznstudio.titanium.datagenerator.loot.block.BasicBlockLootTables;
+import com.hrznstudio.titanium.module.BlockWithTile;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.storage.loot.LootTable;
-import net.minecraftforge.registries.RegistryObject;
-import org.apache.commons.lang3.tuple.Pair;
 
 public class CreativeFEGeneratorBlock extends BasicTileBlock<CreativeFEGeneratorTile> {
 
-    public static Pair<RegistryObject<Block>, RegistryObject<BlockEntityType<?>>> INSTANCE;
+    public static BlockWithTile INSTANCE;
 
     public CreativeFEGeneratorBlock() {
-        super("creative_fe_generator", Block.Properties.copy(Blocks.BEDROCK), CreativeFEGeneratorTile.class);
+        super(Block.Properties.ofFullCopy(Blocks.BEDROCK), CreativeFEGeneratorTile.class);
     }
 
 

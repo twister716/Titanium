@@ -13,9 +13,8 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.registries.DeferredRegister;
-import net.minecraftforge.registries.RegistryObject;
-
+import net.neoforged.neoforge.registries.DeferredHolder;
+import net.neoforged.neoforge.registries.DeferredRegister;
 import javax.annotation.Nonnull;
 import java.util.Objects;
 import java.util.function.Function;
@@ -28,9 +27,9 @@ public class BlockRegistryObjectGroup<B extends Block, I extends Item, T extends
     private final Function<B, I> itemCreator;
     private final BlockEntityType.BlockEntitySupplier<T> tileSupplier;
 
-    private RegistryObject<B> block;
-    private RegistryObject<I> item;
-    private RegistryObject<BlockEntityType<T>> tileEntity;
+    private DeferredHolder<Block, B> block;
+    private DeferredHolder<Item, I> item;
+    private DeferredHolder<BlockEntityType<?>, BlockEntityType<T>> tileEntity;
 
     public BlockRegistryObjectGroup(String name, Supplier<B> blockCreator, Function<B, I> itemCreator) {
         this(name, blockCreator, itemCreator, null);
@@ -40,12 +39,7 @@ public class BlockRegistryObjectGroup<B extends Block, I extends Item, T extends
         this.name = name;
         this.blockCreator = blockCreator;
         this.itemCreator = itemCreator;
-        this.tileSupplier = new BlockEntityType.BlockEntitySupplier<T>() {
-            @Override
-            public T create(BlockPos p_155268_, BlockState p_155269_) {
-                return tileSupplier.get();
-            }
-        };
+        this.tileSupplier = (p_155268_, p_155269_) -> tileSupplier.get();
     }
 
     @Nonnull

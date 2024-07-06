@@ -20,27 +20,30 @@ import com.hrznstudio.titanium.component.sideness.SidedComponentManager;
 import com.hrznstudio.titanium.util.FacingUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.capability.IFluidHandler;
-import net.minecraftforge.fluids.capability.templates.FluidTank;
-
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.fluids.capability.templates.FluidTank;
 import java.awt.*;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 public class SidedFluidTankComponent<T extends IComponentHarness> extends FluidTankComponent<T> implements IFacingComponent, IScreenAddonProvider {
 
     private int color;
     private int facingHandlerX = 8;
     private int facingHandlerY = 84;
-    private HashMap<FacingUtil.Sideness, FaceMode> facingModes;
+    private final Map<FacingUtil.Sideness, FaceMode> facingModes;
     private int pos;
     private boolean hasFacingAddon;
     private FaceMode[] validFaceModes;
@@ -48,7 +51,7 @@ public class SidedFluidTankComponent<T extends IComponentHarness> extends FluidT
     public SidedFluidTankComponent(String name, int amount, int posX, int posY, int pos) {
         super(name, amount, posX, posY);
         this.color = DyeColor.WHITE.getFireworkColor();
-        this.facingModes = new HashMap<>();
+        this.facingModes = new EnumMap<>(FacingUtil.Sideness.class);
         this.pos = pos;
         for (FacingUtil.Sideness facing : FacingUtil.Sideness.values()) {
             this.facingModes.put(facing, FaceMode.ENABLED);
@@ -63,7 +66,7 @@ public class SidedFluidTankComponent<T extends IComponentHarness> extends FluidT
     }
 
     @Override
-    public HashMap<FacingUtil.Sideness, FaceMode> getFacingModes() {
+    public Map<FacingUtil.Sideness, FaceMode> getFacingModes() {
         return facingModes;
     }
 
@@ -98,37 +101,25 @@ public class SidedFluidTankComponent<T extends IComponentHarness> extends FluidT
     }
 
 
-    @Override
-    public boolean work(Level world, BlockPos pos, Direction blockFacing, int workAmount) {
+    private boolean workSides(Level level, BlockPos pos, Direction blockFacing, int workAmount, FaceMode mode) {
         for (FacingUtil.Sideness sideness : facingModes.keySet()) {
-            if (facingModes.get(sideness).equals(FaceMode.PUSH)) {
+            if (facingModes.get(sideness) == mode) {
                 Direction real = FacingUtil.getFacingFromSide(blockFacing, sideness);
-                BlockEntity entity = world.getBlockEntity(pos.relative(real));
-                if (entity != null) {
-                    boolean hasWorked = entity.getCapability(ForgeCapabilities.FLUID_HANDLER, real.getOpposite())
-                        .map(iFluidHandler -> transfer(this, iFluidHandler, workAmount))
-                        .orElse(false);
-                    if (hasWorked) {
-                        return true;
-                    }
-                }
-            }
-        }
-        for (FacingUtil.Sideness sideness : facingModes.keySet()) {
-            if (facingModes.get(sideness).equals(FaceMode.PULL)) {
-                Direction real = FacingUtil.getFacingFromSide(blockFacing, sideness);
-                BlockEntity entity = world.getBlockEntity(pos.relative(real));
-                if (entity != null) {
-                    boolean hasWorked = entity.getCapability(ForgeCapabilities.FLUID_HANDLER, real.getOpposite())
-                        .map(iFluidHandler -> transfer(iFluidHandler, this, workAmount))
-                        .orElse(false);
-                    if (hasWorked) {
+                var cap = level.getCapability(Capabilities.FluidHandler.BLOCK, pos.relative(real), real.getOpposite());
+                if (cap != null) {
+                    if (transfer(mode == FaceMode.PUSH ? this : cap, mode == FaceMode.PUSH ? cap : this, workAmount)) {
                         return true;
                     }
                 }
             }
         }
         return false;
+    }
+
+    @Override
+    public boolean work(Level world, BlockPos pos, Direction blockFacing, int workAmount) {
+        if (workSides(world, pos, blockFacing, workAmount, FaceMode.PUSH)) return true;
+        return workSides(world, pos, blockFacing, workAmount, FaceMode.PULL);
     }
 
     @Override
@@ -171,19 +162,19 @@ public class SidedFluidTankComponent<T extends IComponentHarness> extends FluidT
     }
 
     @Override
-    public FluidTank readFromNBT(CompoundTag nbt) {
+    public FluidTank readFromNBT(HolderLookup.Provider provider, CompoundTag nbt) {
         if (nbt.contains("FacingModes")) {
             CompoundTag compound = nbt.getCompound("FacingModes");
             for (String face : compound.getAllKeys()) {
                 facingModes.put(FacingUtil.Sideness.valueOf(face), FaceMode.valueOf(compound.getString(face)));
             }
         }
-        return super.readFromNBT(nbt);
+        return super.readFromNBT(provider, nbt);
     }
 
     @Override
-    public CompoundTag writeToNBT(CompoundTag comp) {
-        CompoundTag nbt = super.writeToNBT(comp);
+    public CompoundTag writeToNBT(HolderLookup.Provider provider, CompoundTag comp) {
+        CompoundTag nbt = super.writeToNBT(provider, comp);
         CompoundTag compound = new CompoundTag();
         for (FacingUtil.Sideness facing : facingModes.keySet()) {
             compound.putString(facing.name(), facingModes.get(facing).name());
