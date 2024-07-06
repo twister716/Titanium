@@ -1,15 +1,18 @@
+/*
+ * This file is part of Titanium
+ * Copyright (C) 2024, Horizon Studio <contact@hrznstudio.com>.
+ *
+ * This code is licensed under GNU Lesser General Public License v3.0, the full license text can be found in LICENSE.txt
+ */
+
 package com.hrznstudio.titanium.attachment;
 
-import com.hrznstudio.titanium.Titanium;
 import com.hrznstudio.titanium.item.EnergyItem;
-import com.hrznstudio.titanium.module.DeferredRegistryHelper;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.util.ExtraCodecs;
-import net.neoforged.neoforge.attachment.AttachmentType;
 import net.neoforged.neoforge.registries.DeferredHolder;
-import net.neoforged.neoforge.registries.NeoForgeRegistries;
 
 public record StoredEnergyAttachment(int stored, int capacity, int in, int out) {
     public StoredEnergyAttachment(EnergyItem energyItem) {
