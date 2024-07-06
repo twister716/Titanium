@@ -6,9 +6,7 @@ plugins {
   id 'org.cadixdev.licenser' version '0.6.1'
 }
 
-final mcVersion = project.neo_version.split('\\.', 3).with {
-    '1.' + it[0] + '.' + it[1]
-}
+final mcVersion = "1.21"
 version = mcVersion + "-" + api_version
 group = modGroup
 
