@@ -66,19 +66,20 @@ dependencies {
 }
 
 jar {
-    manifest {
-        attributes(["Specification-Title"     : project.name,
-                    "Specification-Vendor"    : "Buuz135",
-                    "Specification-Version"   : "1.0",
-                    "Implementation-Title"    : project.name,
-                    "Implementation-Version"  : "${project.version}",
-                    "Implementation-Vendor"   : "Buuz135",
-                    "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
-                    "ModSide"       : "BOTH",
-                    "Maven-Artifact": "${group}:${modBaseName}:${version}",
-                    "Automatic-Module-Name": "com.hrznstdio.titanium"
-        ])
-    }
+  manifest {
+    attributes(["Specification-Title"     : project.name,
+                "Specification-Vendor"    : "Horizon Studio",
+                "Specification-Version"   : "2.0",
+                "Implementation-Title"    : project.name,
+                "Implementation-Version"  : "${project.api_version + "." + System.getenv('BUILD_NUMBER')}",
+                "Implementation-Vendor"   : "Horizon Studio",
+                "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
+                "Maven-Artifact"          : "${group}:${archivesBaseName}:${version}",
+                "ModSide"                 : "BOTH",
+                "Automatic-Module-Name"   : "com.hrznstdio.titanium"
+    ])
+
+  }
 }
 
 tasks.withType(JavaCompile).configureEach {
