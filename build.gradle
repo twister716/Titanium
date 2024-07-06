@@ -105,24 +105,7 @@ license {
   }
 }
 
-tasks.publishCurseForge.enabled = System.env["CURSE_API"] != null
-
-curseforge {
-  if (System.env["CURSE_API"] != null) {
-    apiKey = System.env["CURSE_API"]
-  }
-  project {
-    id = '287342'
-    changelog = "https://github.com/InnovativeOnlineIndustries/Titanium/blob/changelog/CHANGELOG.md"
-    changelogType = 'markdown'
-    releaseType = 'beta'
-    addGameVersion '1.21'
-
-    mainArtifact(jar) {
-
-    }
-  }
-}
+//tasks.publishCurseForge.enabled = System.env["CURSE_API"] != null
 
 task publishCurseForge(type: net.darkhax.curseforgegradle.TaskPublishCurseForge) {
 
