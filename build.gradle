@@ -110,7 +110,7 @@ task publishCurseForge(type: net.darkhax.curseforgegradle.TaskPublishCurseForge)
   apiToken = System.env["CURSE_API"]
 
   // The main file to upload
-  def mainFile = upload(537663, jar)
+  def mainFile = upload(287342, jar)
 
   mainFile.releaseType = 'beta'
   mainFile.changelog = 'https://github.com/InnovativeOnlineIndustries/Titanium/blob/changelog/CHANGELOG.md'
