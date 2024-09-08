@@ -24,7 +24,7 @@ public class ItemStackNBTHandler implements INBTHandler<ItemStack> {
 
     @Override
     public boolean storeToNBT(net.minecraft.core.HolderLookup.Provider provider, @Nonnull CompoundTag compound, @Nonnull String name, @Nonnull ItemStack object) {
-        compound.put(name, object.save(provider, new CompoundTag()));
+        compound.put(name, object.saveOptional(provider));
         return true;
     }
 

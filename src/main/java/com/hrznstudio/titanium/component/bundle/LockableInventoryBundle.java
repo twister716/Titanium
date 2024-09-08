@@ -32,6 +32,7 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.common.util.INBTSerializable;
+
 import javax.annotation.Nonnull;
 import java.util.Arrays;
 import java.util.Collections;
@@ -108,7 +109,7 @@ public class LockableInventoryBundle<T extends BasicTile & IComponentHarness> im
         compoundNBT.putBoolean("Locked", this.isLocked);
         ListTag nbt = new ListTag();
         for (ItemStack stack : this.filter) {
-            nbt.add(stack.save(provider, new CompoundTag()));
+            nbt.add(stack.saveOptional(provider));
         }
         compoundNBT.put("Filter", nbt);
         return compoundNBT;

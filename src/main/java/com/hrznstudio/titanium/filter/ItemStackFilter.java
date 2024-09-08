@@ -18,6 +18,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -107,7 +108,7 @@ public class ItemStackFilter implements IFilter<ItemStack> {
         CompoundTag filter = new CompoundTag();
         for (FilterSlot<ItemStack> itemStackFilterSlot : this.filter) {
             if (itemStackFilterSlot != null && !itemStackFilterSlot.getFilter().isEmpty())
-                filter.put(itemStackFilterSlot.getFilterID() + "", itemStackFilterSlot.getFilter().save(provider, new CompoundTag()));
+                filter.put(itemStackFilterSlot.getFilterID() + "", itemStackFilterSlot.getFilter().saveOptional(provider));
         }
         compoundNBT.put("Filter", filter);
         compoundNBT.putString("Type", type.name());
