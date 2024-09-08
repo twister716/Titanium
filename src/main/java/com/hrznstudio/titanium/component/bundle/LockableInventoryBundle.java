@@ -26,8 +26,6 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.NbtOps;
-import net.minecraft.resources.RegistryOps;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
@@ -123,7 +121,7 @@ public class LockableInventoryBundle<T extends BasicTile & IComponentHarness> im
         this.filter = new ItemStack[list.size()];
         Arrays.fill(this.filter, ItemStack.EMPTY);
         for (int i = 0; i < list.size(); i++) {
-            this.filter[i] = ItemStack.CODEC.decode(RegistryOps.create(NbtOps.INSTANCE, provider), list.getCompound(i)).getOrThrow().getFirst();
+            this.filter[i] = ItemStack.parseOptional(provider, list.getCompound(i));
         }
         updateFilter();
     }
