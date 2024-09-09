@@ -15,6 +15,7 @@ import com.hrznstudio.titanium.client.screen.addon.AssetScreenAddon;
 import com.hrznstudio.titanium.client.screen.addon.WidgetScreenAddon;
 import com.hrznstudio.titanium.client.screen.asset.IAssetProvider;
 import com.hrznstudio.titanium.container.BasicAddonContainer;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -197,7 +198,7 @@ public class BasicContainerScreen<T extends AbstractContainerMenu> extends Abstr
         if (container instanceof BasicAddonContainer addonContainer) {
             return addonContainer.getTitleColorFromProvider();
         }
-        return 0xFFFFFF;
+        return ChatFormatting.DARK_GRAY.getColor();
     }
 
     public float getTitleX(float xCenter) {

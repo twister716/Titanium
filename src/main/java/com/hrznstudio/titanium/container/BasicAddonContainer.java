@@ -21,7 +21,7 @@ import com.hrznstudio.titanium.network.locator.LocatorFactory;
 import com.hrznstudio.titanium.network.locator.LocatorInstance;
 import com.hrznstudio.titanium.network.locator.instance.EmptyLocatorInstance;
 import com.hrznstudio.titanium.network.locator.instance.InventoryStackLocatorInstance;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.ChatFormatting;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -127,7 +127,7 @@ public class BasicAddonContainer extends BasicInventoryContainer implements IObj
 
     public int getTitleColorFromProvider() {
         if (this.provider instanceof IScreenInfoProvider provider) return provider.getTitleColor();
-        return 0xFFFFFF;
+        return ChatFormatting.DARK_GRAY.getColor();
     }
 
     public float getTitleXPos(float titleWidth, float screenWidth, float screenHeight, float guiWidth, float guiHeight) {
