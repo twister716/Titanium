@@ -9,8 +9,6 @@ package com.hrznstudio.titanium.nbthandler.data;
 
 import com.hrznstudio.titanium.api.INBTHandler;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.NbtOps;
-import net.minecraft.resources.RegistryOps;
 import net.minecraft.world.item.ItemStack;
 
 import javax.annotation.Nonnull;
@@ -30,6 +28,6 @@ public class ItemStackNBTHandler implements INBTHandler<ItemStack> {
 
     @Override
     public ItemStack readFromNBT(net.minecraft.core.HolderLookup.Provider provider, @Nonnull CompoundTag compound, @Nonnull String name, @Nullable ItemStack currentValue) {
-        return ItemStack.CODEC.decode(RegistryOps.create(NbtOps.INSTANCE, provider), compound.getCompound(name)).getOrThrow().getFirst();
+        return ItemStack.parseOptional(provider, compound.getCompound(name));
     }
 }
