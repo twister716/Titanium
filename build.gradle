@@ -125,7 +125,8 @@ task publishCurseForge(type: net.darkhax.curseforgegradle.TaskPublishCurseForge)
   mainFile.changelog = 'https://github.com/InnovativeOnlineIndustries/Titanium/blob/changelog/CHANGELOG.md'
   mainFile.changelogType = 'markdown'
   mainFile.addModLoader("NeoForge")
-  mainFile.addGameVersion(mcVersion)
+  mainFile.addGameVersion("1.21")
+  mainFile.addGameVersion("1.21.1")
 }
 
 tasks.modrinth.enabled = System.env["MODRINTH_TOKEN"] != null
@@ -136,7 +137,7 @@ modrinth {
   projectId = "1Ro7m06l" // This can be the project ID or the slug. Either will work!
   versionType = "beta" // This is the default -- can also be `beta` or `alpha`
   uploadFile = jar // With Loom, this MUST be set to `remapJar` instead of `jar`!
-  gameVersions = ["1.21"] // Must be an array, even with only one version
+  gameVersions = ["1.21", "1.21.1"] // Must be an array, even with only one version
   loaders = ["neoforge"] // Must also be an array - no need to specify this if you're using Loom or ForgeGradle
   dependencies { // A special DSL for creating dependencies
 
