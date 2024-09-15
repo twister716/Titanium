@@ -56,7 +56,9 @@ public class BasicButtonAddon extends BasicScreenAddon {
                 return false;
             Minecraft.getInstance().getSoundManager().play(new SimpleSoundInstance(SoundEvents.UI_BUTTON_CLICK.value(), SoundSource.PLAYERS, 1f, 1f, RandomSource.create(), Minecraft.getInstance().player.blockPosition())); //getPosition
             ILocatable locatable = (ILocatable) ((AbstractContainerScreen) screen).getMenu();
-            Titanium.NETWORK.sendToServer(new ButtonClickNetworkMessage(locatable.getLocatorInstance(), this.button.getId(), new CompoundTag()));
+            CompoundTag compoundTag = new CompoundTag();
+            compoundTag.putInt("Button", button);
+            Titanium.NETWORK.sendToServer(new ButtonClickNetworkMessage(locatable.getLocatorInstance(), this.button.getId(), compoundTag));
         }
         return true;
     }
