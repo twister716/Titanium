@@ -32,6 +32,8 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.BucketItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.MilkBucketItem;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.client.extensions.common.IClientFluidTypeExtensions;
 import net.neoforged.neoforge.common.Tags;
@@ -107,7 +109,8 @@ public class TankScreenAddon extends BasicScreenAddon {
         strings.add(Component.translatable("tooltip.titanium.tank.amount").withStyle(ChatFormatting.GOLD).append(Component.literal(ChatFormatting.WHITE + new DecimalFormat().format(tank.getFluidAmount()) + ChatFormatting.GOLD + "/" + ChatFormatting.WHITE + new DecimalFormat().format(tank.getCapacity()) + ChatFormatting.DARK_AQUA + "mb")));
         if (!Minecraft.getInstance().player.containerMenu.getCarried().isEmpty() && Minecraft.getInstance().player.containerMenu.getCarried().getCapability(Capabilities.FluidHandler.ITEM) != null) {
             Optional.ofNullable(Minecraft.getInstance().player.containerMenu.getCarried().getCapability(Capabilities.FluidHandler.ITEM)).ifPresent(iFluidHandlerItem -> {
-                boolean isBucket = Minecraft.getInstance().player.containerMenu.getCarried().getItem() instanceof BucketItem;
+                Item carriedItem = Minecraft.getInstance().player.containerMenu.getCarried().getItem();
+                boolean isBucket = carriedItem instanceof BucketItem || carriedItem instanceof MilkBucketItem;
                 int amount = isBucket ? FluidType.BUCKET_VOLUME : Integer.MAX_VALUE;
                 boolean canFillFromItem = false;
                 boolean canDrainFromItem = false;
@@ -162,7 +165,8 @@ public class TankScreenAddon extends BasicScreenAddon {
                     compoundNBT.putBoolean("Invalid", true);
                 }
                 Optional.ofNullable(Minecraft.getInstance().player.containerMenu.getCarried().getCapability(Capabilities.FluidHandler.ITEM)).ifPresent(iFluidHandlerItem -> {
-                    boolean isBucket = Minecraft.getInstance().player.containerMenu.getCarried().getItem() instanceof BucketItem;
+                    Item carriedItem = Minecraft.getInstance().player.containerMenu.getCarried().getItem();
+                    boolean isBucket = carriedItem instanceof BucketItem || carriedItem instanceof MilkBucketItem;
                     int amount = isBucket ? FluidType.BUCKET_VOLUME : Integer.MAX_VALUE;
                     boolean canFillFromItem = false;
                     boolean canDrainFromItem = false;

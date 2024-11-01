@@ -50,7 +50,9 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.item.BucketItem;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.MilkBucketItem;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -282,12 +284,15 @@ public abstract class ActiveTile<T extends ActiveTile<T>> extends BasicTile<T> i
                     for (FluidTankComponent<T> fluidTankComponent : multiTankComponent.getTanks()) {
                         if (fluidTankComponent.getName().equalsIgnoreCase(name))
                             Optional.ofNullable(playerEntity.containerMenu.getCarried().getCapability(Capabilities.FluidHandler.ITEM)).ifPresent(iFluidHandlerItem -> {
+                                Item carriedItem = playerEntity.containerMenu.getCarried().getItem();
+                                boolean isBucket = carriedItem instanceof BucketItem || carriedItem instanceof MilkBucketItem;
+
                                 if (fill) {
-                                    int amount = playerEntity.containerMenu.getCarried().getItem() instanceof BucketItem ? FluidType.BUCKET_VOLUME : Integer.MAX_VALUE;
+                                    int amount = isBucket ? FluidType.BUCKET_VOLUME : Integer.MAX_VALUE;
                                     amount = fluidTankComponent.fill(iFluidHandlerItem.drain(amount, IFluidHandler.FluidAction.SIMULATE), IFluidHandler.FluidAction.EXECUTE);
                                     iFluidHandlerItem.drain(amount, IFluidHandler.FluidAction.EXECUTE);
                                 } else {
-                                    int amount = playerEntity.containerMenu.getCarried().getItem() instanceof BucketItem ? FluidType.BUCKET_VOLUME : Integer.MAX_VALUE;
+                                    int amount = isBucket ? FluidType.BUCKET_VOLUME : Integer.MAX_VALUE;
                                     amount = iFluidHandlerItem.fill(fluidTankComponent.drain(amount, IFluidHandler.FluidAction.SIMULATE), IFluidHandler.FluidAction.EXECUTE);
                                     fluidTankComponent.drain(amount, IFluidHandler.FluidAction.EXECUTE);
                                 }
