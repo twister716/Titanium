@@ -59,10 +59,12 @@ neoForge {
 }
 
 dependencies {
-  compileOnly "mezz.jei:jei-1.21-common-api:$jei_version"
-  compileOnly "mezz.jei:jei-1.21-neoforge-api:$jei_version"
-  runtimeOnly "mezz.jei:jei-1.21-neoforge:$jei_version"
+  compileOnly "mezz.jei:jei-1.21.1-common-api:$jei_version"
+  compileOnly "mezz.jei:jei-1.21.1-neoforge-api:$jei_version"
+  runtimeOnly "mezz.jei:jei-1.21.1-neoforge:$jei_version"
   compileOnly "com.almostreliable.mods:almostunified-neoforge:$almostunified_version:api"
+  runtimeOnly "curse.maven:industrial-foregoing-266515:5866238"
+  //runtimeOnly "curse.maven:super-factory-manager-306935:5664209"
   //implementation "curse.maven:refined-storage-243076:5165548"
 }
 

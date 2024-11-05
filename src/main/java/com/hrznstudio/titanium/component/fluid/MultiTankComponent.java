@@ -24,13 +24,7 @@ import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public class MultiTankComponent<T extends IComponentHarness> implements IScreenAddonProvider, IContainerAddonProvider,
     ICapabilityHolder<MultiTankComponent.MultiTankCapabilityHandler<T>>, IComponentHandler {
@@ -60,7 +54,7 @@ public class MultiTankComponent<T extends IComponentHarness> implements IScreenA
         return component instanceof FluidTankComponent;
     }
 
-    private void rebuildCapability(FacingUtil.Sideness[] sides) {
+    public void rebuildCapability(FacingUtil.Sideness[] sides) {
         for (FacingUtil.Sideness side : sides) {
             lazyOptionals.put(side, Optional.of(new MultiTankCapabilityHandler<>(getHandlersForSide(side))));
         }

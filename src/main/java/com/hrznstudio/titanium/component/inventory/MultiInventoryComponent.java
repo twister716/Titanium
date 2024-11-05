@@ -21,6 +21,7 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.items.ItemStackHandler;
+
 import javax.annotation.Nonnull;
 import java.util.*;
 
@@ -52,7 +53,7 @@ public class MultiInventoryComponent<T extends IComponentHarness> implements ISc
         return component instanceof InventoryComponent;
     }
 
-    private void rebuildCapability(FacingUtil.Sideness[] sides) {
+    public void rebuildCapability(FacingUtil.Sideness[] sides) {
         for (FacingUtil.Sideness side : sides) {
             lazyOptionals.put(side, Optional.of(new MultiInvCapabilityHandler<>(getHandlersForSide(side))));
         }
