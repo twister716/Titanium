@@ -24,19 +24,17 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import net.neoforged.neoforge.fluids.capability.templates.FluidTank;
+
 import java.awt.*;
 import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 public class SidedFluidTankComponent<T extends IComponentHarness> extends FluidTankComponent<T> implements IFacingComponent, IScreenAddonProvider {
 
@@ -144,10 +142,14 @@ public class SidedFluidTankComponent<T extends IComponentHarness> extends FluidT
     }
 
     private boolean transfer(IFluidHandler from, IFluidHandler to, int workAmount) {
-        FluidStack stack = from.drain(workAmount * 100, FluidAction.SIMULATE);
-        if (!stack.isEmpty()) {
-            stack = from.drain(to.fill(stack, FluidAction.EXECUTE), FluidAction.EXECUTE);
-            return !stack.isEmpty();
+        for (int tank = 0; tank < from.getTanks(); tank++) {
+            FluidStack fluidStack = from.getFluidInTank(tank);
+            fluidStack = fluidStack.copyWithAmount(Math.min(workAmount * 100, fluidStack.getAmount()));
+            fluidStack = from.drain(fluidStack, FluidAction.SIMULATE);
+            if (fluidStack.isEmpty()) continue;
+            fluidStack = fluidStack.copyWithAmount(to.fill(fluidStack, FluidAction.EXECUTE));
+            fluidStack = from.drain(fluidStack, FluidAction.EXECUTE);
+            if (!fluidStack.isEmpty()) return true;
         }
         return false;
     }
