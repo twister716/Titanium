@@ -24,16 +24,14 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.ItemHandlerHelper;
+
 import java.awt.*;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Optional;
 
 public class SidedInventoryComponent<T extends IComponentHarness> extends InventoryComponent<T> implements IFacingComponent {
 
@@ -225,7 +223,7 @@ public class SidedInventoryComponent<T extends IComponentHarness> extends Invent
         for (int i = 0; i < dest.getSlots(); i++) {
             if (!dest.isItemValid(i, stack)) continue;
             ItemStack slotStack = dest.getStackInSlot(i);
-            if (slotStack.isEmpty()) return i;
+            if (slotStack.isEmpty() && dest.insertItem(i, stack, true).getCount() < stack.getCount()) return i;
             if (ItemStack.isSameItemSameComponents(slotStack, stack) && slotStack.getCount() < Math.min(slotStack.getMaxStackSize(), dest.getSlotLimit(i))) {
                 return i;
             }
