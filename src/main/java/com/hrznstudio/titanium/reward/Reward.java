@@ -11,15 +11,23 @@ import com.google.gson.JsonParser;
 import com.hrznstudio.titanium.util.URLUtil;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
+
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class Reward {
+
+    public static Calendar BUUZ_BIRTH_DATE = Calendar.getInstance();
+
+    static {
+        BUUZ_BIRTH_DATE.set(2024, 02, 12);
+    }
 
     private final ResourceLocation resourceLocation;
     private final URL contributorsURL;
@@ -72,6 +80,8 @@ public class Reward {
     }
 
     public boolean isPlayerValid(UUID uuid) {
+        if (Calendar.getInstance().get(Calendar.WEEK_OF_YEAR) == BUUZ_BIRTH_DATE.get(Calendar.WEEK_OF_YEAR))
+            return true;
         return players.contains(uuid);
     }
 }
