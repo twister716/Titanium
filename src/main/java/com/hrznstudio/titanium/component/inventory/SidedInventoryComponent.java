@@ -224,7 +224,7 @@ public class SidedInventoryComponent<T extends IComponentHarness> extends Invent
             if (!dest.isItemValid(i, stack)) continue;
             ItemStack slotStack = dest.getStackInSlot(i);
             if (slotStack.isEmpty() && dest.insertItem(i, stack, true).getCount() < stack.getCount()) return i;
-            if (ItemStack.isSameItemSameComponents(slotStack, stack) && slotStack.getCount() < Math.min(slotStack.getMaxStackSize(), dest.getSlotLimit(i))) {
+            if (ItemStack.isSameItemSameComponents(slotStack, stack) && dest.insertItem(i, stack, true).getCount() < stack.getCount()) {
                 return i;
             }
         }
